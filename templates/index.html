@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-en="Arduino Code Generator" data-id="Generator Kode Arduino">Arduino Code Generator</title>
+
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --error-color: #ef4444;
+            --success-color: #22c55e;
+            --border-color: #444;
+            --bg-color: #1e1e1e;
+            --text-color: #ddd;
+            --input-bg-color: #333;
+            --input-border-color: #555;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: #2d2d2d;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #f5f5f5;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            gap: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .form-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .form-row.triple {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .form-row.full {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #bbb;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--input-border-color);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            background-color: var(--input-bg-color);
+            color: var(--text-color);
+            transition: border-color 0.15s ease;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            background-color: #2563eb;
+        }
+
+        button:disabled {
+            background-color: #93c5fd;
+            cursor: not-allowed;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error-message {
+            background-color: #fee2e2;
+            border: 1px solid #fecaca;
+            color: var(--error-color);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: none;
+            color: #bbb;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            background-color: #444;
+            color: #fff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        pre {
+            background: #282828;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            color: #ddd;
+        }
+
+        .helper-text {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 0.25rem;
+        }
+
+        .lang-switcher {
+            text-align: right;
+            margin-bottom: 1rem;
+        }
+        .lang-switcher select {
+            padding: 0.5rem;
+            background: var(--input-bg-color);
+            color: var(--text-color);
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Smooth transition for localized elements */
+        [data-en], [data-id] {
+            transition: opacity 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="lang-switcher">
+            <label for="language" data-en="Language" data-id="Bahasa">Language</label>
+            <select id="language" onchange="switchLang()">
+                <option value="en" data-en="English" data-id="Inggris">English</option>
+                <option value="id" data-en="Indonesian" data-id="Indonesia">Bahasa Indonesia</option>
+            </select>
+        </div>
+        <div class="card">
+            <h2 class="form-title" data-en="Arduino Project Generator" data-id="Generator Proyek Arduino">Arduino Project Generator</h2>
+            <form id="codeForm" class="form-grid">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="project_name" data-en="Project Name" data-id="Nama Proyek">Project Name</label>
+                        <input type="text" id="project_name" required
+                               data-en-placeholder="Enter project name"
+                               data-id-placeholder="Masukkan nama proyek">
+                        <div class="helper-text" data-en="Give your project a descriptive name" data-id="Beri nama proyek yang menggambarkan tujuannya">Give your project a descriptive name</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="mcu" data-en="MCU" data-id="Mikrokontroler">MCU</label>
+                        <input type="text" id="mcu"
+                               data-en-placeholder="e.g., Arduino Nano"
+                               data-id-placeholder="contoh, Arduino Nano"
+                               required>
+                        <div class="helper-text" data-en="Specify the microcontroller unit" data-id="Tentukan unit mikrokontroler">Specify the microcontroller unit</div>
+                    </div>
+                </div>
+
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label for="definition" data-en="Definition/Use Case" data-id="Definisi/Kasus Penggunaan">Definition/Use Case</label>
+                        <textarea id="definition" required
+                                  data-en-placeholder="Describe what your project should do..."
+                                  data-id-placeholder="Jelaskan apa yang harus dilakukan proyek Anda..."></textarea>
+                        <div class="helper-text" data-en="Provide a clear description of your project's purpose" data-id="Berikan deskripsi yang jelas tentang tujuan proyek Anda">Provide a clear description of your project's purpose</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="sensors" data-en="Sensors" data-id="Sensor">Sensors</label>
+                        <input type="text" id="sensors"
+                               data-en-placeholder="e.g., DHT11, HC-SR04"
+                               data-id-placeholder="contoh, DHT11, HC-SR04">
+                        <div class="helper-text" data-en="Comma-separated list of sensors" data-id="Daftar sensor dipisahkan koma">Comma-separated list of sensors</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="actuators" data-en="Actuators" data-id="Aktuator">Actuators</label>
+                        <input type="text" id="actuators"
+                               data-en-placeholder="e.g., Servo, DC Motor"
+                               data-id-placeholder="contoh, Servo, Motor DC">
+                        <div class="helper-text" data-en="Comma-separated list of actuators" data-id="Daftar aktuator dipisahkan koma">Comma-separated list of actuators</div>
+                    </div>
+                </div>
+
+                <div class="form-row triple">
+                    <div class="form-group">
+                        <label for="communication" data-en="Communication" data-id="Komunikasi">Communication</label>
+                        <input type="text" id="communication"
+                               data-en-placeholder="e.g., Serial, I2C"
+                               data-id-placeholder="contoh, Serial, I2C">
+                        <div class="helper-text" data-en="Communication protocol" data-id="Protokol komunikasi">Communication protocol</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="control" data-en="Control" data-id="Kontrol">Control</label>
+                        <input type="text" id="control"
+                               data-en-placeholder="e.g., PID, Manual"
+                               data-id-placeholder="contoh, PID, Manual">
+                        <div class="helper-text" data-en="Control method" data-id="Metode kontrol">Control method</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="timing" data-en="Timing" data-id="Waktu">Timing</label>
+                        <input type="text" id="timing"
+                               data-en-placeholder="e.g., PWM, millis"
+                               data-id-placeholder="contoh, PWM, millis">
+                        <div class="helper-text" data-en="Timing requirements" data-id="Persyaratan waktu">Timing requirements</div>
+                    </div>
+                </div>
+
+                <button type="submit" id="submitBtn" data-en="Generate Code" data-id="Hasilkan Kode">
+                    <span>Generate Code</span>
+                </button>
+            </form>
+        </div>
+
+        <div id="errorContainer"></div>
+        <div id="output" class="card" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Advanced Language Switching
+        const translations = {
+            en: {
+                projectNamePlaceholder: "Enter project name",
+                mcuPlaceholder: "e.g., Arduino Nano",
+                definitionPlaceholder: "Describe what your project should do...",
+                sensorsPlaceholder: "e.g., DHT11, HC-SR04",
+                actuatorsPlaceholder: "e.g., Servo, DC Motor",
+                communicationPlaceholder: "e.g., Serial, I2C",
+                controlPlaceholder: "e.g., PID, Manual",
+                timingPlaceholder: "e.g., PWM, millis",
+                generateButtonText: "Generate Code",
+                generatingButtonText: "Generating...",
+                copyAlertText: "Copied to clipboard!",
+                generateErrorText: "Failed to generate code. Please try again.",
+            },
+            id: {
+                projectNamePlaceholder: "Masukkan nama proyek",
+                mcuPlaceholder: "contoh, Arduino Nano",
+                definitionPlaceholder: "Jelaskan apa yang harus dilakukan proyek Anda...",
+                sensorsPlaceholder: "contoh, DHT11, HC-SR04",
+                actuatorsPlaceholder: "contoh, Servo, Motor DC",
+                communicationPlaceholder: "contoh, Serial, I2C",
+                controlPlaceholder: "contoh, PID, Manual",
+                timingPlaceholder: "contoh, PWM, millis",
+                generateButtonText: "Hasilkan Kode",
+                generatingButtonText: "Menghasilkan...",
+                copyAlertText: "Disalin ke papan klip!",
+                generateErrorText: "Gagal menghasilkan kode. Silakan coba lagi.",
+            }
+        };
+
+        function switchLang() {
+            const lang = document.getElementById("language").value;
+            const currentLang = document.documentElement.lang;
+
+            // Update document language
+            document.documentElement.lang = lang;
+
+            // Switch text content for elements with data-en and data-id attributes
+            document.querySelectorAll('[data-en], [data-id]').forEach(el => {
+                el.textContent = el.getAttribute(`data-${lang}`);
+            });
+
+            // Switch placeholders for inputs
+            document.getElementById('project_name').placeholder = translations[lang].projectNamePlaceholder;
+            document.getElementById('mcu').placeholder = translations[lang].mcuPlaceholder;
+            document.getElementById('definition').placeholder = translations[lang].definitionPlaceholder;
+            document.getElementById('sensors').placeholder = translations[lang].sensorsPlaceholder;
+            document.getElementById('actuators').placeholder = translations[lang].actuatorsPlaceholder;
+            document.getElementById('communication').placeholder = translations[lang].communicationPlaceholder;
+            document.getElementById('control').placeholder = translations[lang].controlPlaceholder;
+            document.getElementById('timing').placeholder = translations[lang].timingPlaceholder;
+
+            // Optional: Update select options
+            const languageSelect = document.getElementById('language');
+            Array.from(languageSelect.options).forEach(option => {
+                option.textContent = option.getAttribute(`data-${lang}`);
+            });
+
+            // Fade effect
+            const allInputs = document.querySelectorAll('input, textarea, select, button');
+            allInputs.forEach(input => {
+                input.style.opacity = '0';
+                setTimeout(() => {
+                    input.style.opacity = '1';
+                }, 300);
+            });
+        }
+
+        // Initial language setup on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set default language to browser preference or English
+            const browserLang = navigator.language.startsWith('id') ? 'id' : 'en';
+            const languageSelect = document.getElementById('language');
+            languageSelect.value = browserLang;
+            switchLang();
+        });
+
+        const form = document.getElementById('codeForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const errorContainer = document.getElementById('errorContainer');
+        const output = document.getElementById('output');
+
+        // Rest of the previous script remains the same...
+        function showLoading() {
+            const lang = document.getElementById("language").value;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<div class="loading-spinner"></div><span>${translations[lang].generatingButtonText}</span>`;
+        }
+
+        function hideLoading() {
+            const lang = document.getElementById("language").value;
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `<span>${translations[lang].generateButtonText}</span>`;
+        }
+
+        function copyToClipboard(text) {
+            const lang = document.getElementById("language").value;
+            navigator.clipboard.writeText(text).then(() => {
+                alert(translations[lang].copyAlertText);
+            }).catch(err => {
+                console.error("Failed to copy: ", err);
+            });
+        }
+
+        // Modify error handling to use translations
+        function showError(message) {
+            const lang = document.getElementById("language").value;
+            errorContainer.innerHTML = `
+                <div class="error-message">
+                    ${message || translations[lang].generateErrorText}
+                </div>
+            `;
+        }
+
+        function createTabs(files) {
+            const tabsHtml = Object.keys(files).map((filename, index) => `
+                <button class="tab ${index === 0 ? 'active' : ''}" data-tab="${filename}">
+                    ${filename}
+                </button>
+            `).join('');
+
+            const contentHtml = Object.entries(files).map(([filename, content], index) => `
+                <div class="tab-content ${index === 0 ? 'active' : ''}" data-content="${filename}">
+                    <pre><code class="language-arduino">${content}</code></pre>
+                    <button class="copy-btn" data-copy="${filename}">Copy</button>
+                </div>
+            `).join('');
+
+            return `
+                <h3 class="form-title">Generated Files</h3>
+                <div class="tabs">${tabsHtml}</div>
+                <div class="tab-contents">${contentHtml}</div>
+            `;
+        }
+
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            showLoading();
+            errorContainer.innerHTML = '';
+            output.style.display = 'none';
+
+            const formData = {
+                "Project name": document.getElementById("project_name").value,
+                "Definition/use case": document.getElementById("definition").value,
+                "Sensors": document.getElementById("sensors").value.split(",").map(s => s.trim()).filter(Boolean),
+                "Actuators": document.getElementById("actuators").value.split(",").map(a => a.trim()).filter(Boolean),
+                "MCU": document.getElementById("mcu").value,
+                "Other parameters": {
+                    "communication": document.getElementById("communication").value,
+                    "control": document.getElementById("control").value,
+                    "timing": document.getElementById("timing").value.split(",").map(t => t.trim()).filter(Boolean)
+                }
+            };
+
+            try {
+                const response = await fetch("/generate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result && typeof result === 'object' && Object.keys(result).length > 0) {
+                    output.innerHTML = createTabs(result);
+                    output.style.display = 'block';
+
+                    output.querySelectorAll('.tab').forEach(tab => {
+                        tab.addEventListener('click', () => {
+                            const tabId = tab.dataset.tab;
+                            output.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                            tab.classList.add('active');
+                            output.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                            output.querySelector(`.tab-content[data-content="${tabId}"]`).classList.add('active');
+                        });
+                    });
+
+                    output.querySelectorAll('.copy-btn').forEach(button => {
+                        button.addEventListener('click', () => {
+                            const filename = button.dataset.copy;
+                            const content = result[filename];
+                            copyToClipboard(content);
+                        });
+                    });
+                } else {
+                    showError("Parsing error: Displaying raw response.");
+                    output.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+                    output.style.display = 'block';
+                }
+            } catch (error) {
+                console.error("Error fetching generated code:", error);
+                showError("Failed to generate code. Please try again.");
+            }
+
+            hideLoading();
+        });
+
+        // The rest of the form submission and event listeners remain the same
+    </script>
+</body>
+</html>

@@ -19,7 +19,7 @@ This project is a Flask-based API that generates fully functional and well-docum
 ## Setup Instructions
 ### 1. Clone the Repository
 ```sh
- git clone https://github.com/your-repo/arduino-code-generator.git
+ git clone https://github.com/lily-osp/arduino-code-generator.git
  cd arduino-code-generator
 ```
 
